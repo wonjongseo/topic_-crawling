@@ -75,7 +75,7 @@ def parse(url, headers):
                     temp['id'] = html_suffic
                     detail_url = BASE_URL + html_suffic
                     
-                    # response2 = requests.get("https://www.kpedia.jp/w/44668", headers=headers)
+                    # response2 = requests.get("https://www.kpedia.jp/w/46353", headers=headers)
                     response2 = requests.get(detail_url, headers=headers)
                     response2.raise_for_status()
                     soup2 = BeautifulSoup(response2.text, "html.parser")
@@ -87,6 +87,7 @@ def parse(url, headers):
                     yomikata_index = -1
                     yuizigo_index = -1
                     descption_index = -1
+                    kangi_index = -1
                     example_index = -1
                     
                     # 예제의 인덱스 찾을 리스트, 
@@ -104,6 +105,8 @@ def parse(url, headers):
                             yomikata_index = index
                         if all_tables_html[index].text.__contains__("   類義語  ："):
                             yuizigo_index = index
+                        if all_tables_html[index].text.__contains__("   漢字  ："):
+                            kangi_index = index
 
 
                     if mean_index != -1 :
@@ -112,15 +115,20 @@ def parse(url, headers):
                         temp["yomikata"] = all_tables_html[yomikata_index].text
                     if yuizigo_index  != -1 :
                         temp["yuizigo"] = all_tables_html[yuizigo_index].text
-
-                    if yuizigo_index != -1 :
+                    
+                    
+                    if kangi_index != -1 :
+                        descption_index = kangi_index + 1
+                    elif yuizigo_index != -1 : 
                         descption_index = yuizigo_index + 1 
-                    else :
-                        if yomikata_index != -1 :
-                            descption_index = yomikata_index + 1
+                    elif yomikata_index != -1 :
+                        descption_index = yomikata_index + 1
+                        # if yomikata_index != -1 :
                         
                     if descption_index != -1:
                         temp["desc"] = all_tables_html[descption_index].text
+                    
+                    print(temp["desc"])
 
                     
                     # 예문 테이블 인덱스 탐색
@@ -152,10 +160,12 @@ def parse(url, headers):
                             for index in range(0, examples_html_len, 2):
                                 example = {}
                                 example_word =  examples_html[index].text
+                                if example_word.__contains____("の例文をすべてを見る") :
+                                    continue
                                 example_mean =  examples_html[index+1].text
 
-                                example['word'] = example_word
-                                example['mean'] = example_mean
+                                example['word'] = example_word # .replace(" ・ ", "" , 1)
+                                example['mean'] = example_mean # .replace("  ", "", 1)
                                 examples.append(example)
                             
                             temp['examples'] = examples
@@ -164,7 +174,7 @@ def parse(url, headers):
                             error_list.append(detail_url)
                     
                     my_list.append(temp)
-                    print(len(my_list))
+                    print(detail_url)
                     print('-----------------------')
 
            
